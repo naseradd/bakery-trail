@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0c0805" />
+  <title>Marathon Éclair · MTL · 23 mai 2026</title>
+  <meta name="description" content="Tournée dégustation d'éclairs à Montréal — 6 pâtisseries, samedi 23 mai 2026." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #0c0805;
+      --surface:      #161009;
+      --elevated:     #1f1510;
+      --gold:         #c4a35a;
+      --gold-bright:  #dbb96e;
+      --gold-dim:     rgba(196, 163, 90, 0.25);
+      --gold-glow:    rgba(196, 163, 90, 0.08);
+      --cream:        #ecdfc8;
+      --cream-dim:    #7a6245;
+      --green:        #2d6b47;
+      --green-bright: #4a9263;
+      --green-dim:    rgba(45, 107, 71, 0.25);
+      --red-dim:      rgba(180, 60, 60, 0.2);
+      --border:       rgba(196, 163, 90, 0.1);
+      --border-mid:   rgba(196, 163, 90, 0.2);
+      --r:            16px;
+      --r-sm:         10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { background: var(--bg); }
+
+    body {
+      background: var(--bg);
+      color: var(--cream);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: calc(env(safe-area-inset-bottom) + 32px);
+    }
+
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ── Typography ─────────────────────────────────────────────── */
+    .f-display { font-family: 'Cormorant Garamond', Georgia, serif; }
+    .f-mono    { font-family: 'JetBrains Mono', monospace; }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding-top: env(safe-area-inset-top);
+    }
+
+    .header-inner {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 14px 20px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .header-wordmark {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--gold-bright);
+      letter-spacing: -0.3px;
+      line-height: 1;
+    }
+
+    .header-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--cream-dim);
+      margin-top: 2px;
+      letter-spacing: 0.3px;
+    }
+
+    .countdown {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gold);
+      background: var(--gold-glow);
+      border: 1px solid var(--gold-dim);
+      padding: 5px 11px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .nav-tabs {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 0 20px 12px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .nav-tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--cream-dim);
+      transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .nav-tab.active {
+      background: var(--gold-glow);
+      color: var(--gold-bright);
+    }
+
+    /* ── Main layout ─────────────────────────────────────────────── */
+    main {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ── Hero ─────────────────────────────────────────────────────── */
+    .hero {
+      padding: 36px 0 28px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 52px;
+      font-weight: 700;
+      line-height: 1.05;
+      color: var(--cream);
+      letter-spacing: -1px;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .hero-rule {
+      width: 48px;
+      height: 1px;
+      background: var(--gold-dim);
+      margin: 18px auto;
+    }
+
+    .hero-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--cream-dim);
+      line-height: 1.7;
+    }
+
+    /* ── Route CTAs ─────────────────────────────────────────────── */
+    .route-section { margin-bottom: 32px; }
+
+    .btn-primary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      width: 100%;
+      background: var(--gold);
+      color: #0c0805;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 17px;
+      border-radius: var(--r);
+      letter-spacing: -0.2px;
+      transition: opacity 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-primary:active { transform: scale(0.98); opacity: 0.88; }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .btn-secondary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      color: var(--cream);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 13px;
+      border-radius: var(--r);
+      transition: border-color 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-secondary:active { transform: scale(0.97); border-color: var(--gold-dim); }
+
+    /* ── Section heading ─────────────────────────────────────────── */
+    .section-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 16px;
+    }
+
+    /* ── Stop cards ─────────────────────────────────────────────── */
+    .stop-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 14px;
+      overflow: hidden;
+      opacity: 0;
+      animation: fadeUp 0.35s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .stop-card:nth-child(1) { animation-delay: 0.05s; }
+    .stop-card:nth-child(2) { animation-delay: 0.1s;  }
+    .stop-card:nth-child(3) { animation-delay: 0.15s; }
+    .stop-card:nth-child(4) { animation-delay: 0.2s;  }
+    .stop-card:nth-child(5) { animation-delay: 0.25s; }
+    .stop-card:nth-child(6) { animation-delay: 0.3s;  }
+
+    .stop-card.is-next {
+      border-color: var(--gold-dim);
+      box-shadow: 0 0 24px rgba(196, 163, 90, 0.07);
+    }
+
+    .stop-card.is-visited { opacity: 0.6; }
+    .stop-card.is-visited .card-header { opacity: 0.8; }
+
+    .card-header {
+      padding: 18px 20px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stop-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 42px;
+      font-weight: 700;
+      line-height: 1;
+      color: rgba(196, 163, 90, 0.2);
+      min-width: 46px;
+      text-align: right;
+      padding-top: 2px;
+      transition: color 0.2s;
+    }
+
+    .stop-card.is-next .stop-num { color: var(--gold); }
+
+    .stop-info { flex: 1; min-width: 0; }
+
+    .stop-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 23px;
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.15;
+    }
+
+    .stop-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 5px;
+    }
+
+    .stop-detail {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--cream-dim);
+      letter-spacing: 0.2px;
+    }
+
+    .stop-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      margin-top: 6px;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+    }
+
+    .badge-next {
+      background: var(--gold-glow);
+      border: 1px solid var(--gold-dim);
+      color: var(--gold-bright);
+    }
+
+    .badge-visited {
+      background: rgba(74, 146, 99, 0.12);
+      border: 1px solid var(--green-dim);
+      color: var(--green-bright);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── Card body ───────────────────────────────────────────────── */
+    .card-body { padding: 16px 20px; }
+
+    .transit-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--cream-dim);
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+    }
+
+    .transit-mode {
+      font-weight: 500;
+      color: var(--cream);
+    }
+
+    /* ── Flavors ─────────────────────────────────────────────────── */
+    .flavors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 16px;
+    }
+
+    .flavor-tag {
+      font-size: 11px;
+      background: rgba(196, 163, 90, 0.07);
+      border: 1px solid rgba(196, 163, 90, 0.14);
+      color: var(--gold);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── Action row ──────────────────────────────────────────────── */
+    .action-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .btn-maps {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      background: var(--gold);
+      color: #0c0805;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px 16px;
+      border-radius: var(--r-sm);
+      transition: opacity 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-maps:active { transform: scale(0.97); opacity: 0.85; }
+
+    .btn-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: var(--elevated);
+      border: 1px solid var(--border-mid);
+      color: var(--cream);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 10px 14px;
+      border-radius: var(--r-sm);
+      min-width: 58px;
+      transition: border-color 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-icon:active { transform: scale(0.95); border-color: var(--gold-dim); }
+
+    .btn-icon.disabled {
+      opacity: 0.25;
+      pointer-events: none;
+    }
+
+    .btn-icon svg { width: 17px; height: 17px; }
+
+    /* ── Check-in ─────────────────────────────────────────────────── */
+    .checkin-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(74, 146, 99, 0.08);
+      border: 1px solid var(--green-dim);
+      color: var(--green-bright);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 13px;
+      border-radius: var(--r-sm);
+      margin-top: 8px;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .checkin-btn:active { transform: scale(0.98); }
+
+    .checkin-btn.done {
+      background: rgba(74, 146, 99, 0.15);
+      border-color: rgba(74, 146, 99, 0.4);
+      cursor: default;
+    }
+
+    .checkin-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ── Photos ──────────────────────────────────────────────────── */
+    .photos-section {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .photos-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--cream-dim);
+      margin-bottom: 10px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .photos-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .photos-strip::-webkit-scrollbar { display: none; }
+
+    .photo-thumb {
+      flex-shrink: 0;
+      width: 76px;
+      height: 76px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid var(--border-mid);
+      cursor: pointer;
+      transition: transform 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .photo-thumb:active { transform: scale(0.93); }
+
+    .add-photo-btn {
+      flex-shrink: 0;
+      width: 76px;
+      height: 76px;
+      border-radius: 10px;
+      border: 1px dashed rgba(196, 163, 90, 0.3);
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: var(--cream-dim);
+      font-size: 10px;
+      font-weight: 500;
+      transition: border-color 0.15s, color 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .add-photo-btn:active { border-color: var(--gold); color: var(--gold); transform: scale(0.95); }
+    .add-photo-btn svg { width: 22px; height: 22px; }
+
+    /* ── Notes card ──────────────────────────────────────────────── */
+    .stop-note {
+      margin-top: 12px;
+      font-size: 11px;
+      font-style: italic;
+      color: var(--cream-dim);
+      border-left: 2px solid rgba(196, 163, 90, 0.2);
+      padding-left: 10px;
+    }
+
+    /* ── Lightbox ────────────────────────────────────────────────── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.93);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .lightbox.open { display: flex; }
+
+    .lightbox-img {
+      max-width: 100%;
+      max-height: 88vh;
+      border-radius: 12px;
+      object-fit: contain;
+    }
+
+    .lightbox-close {
+      position: fixed;
+      top: max(20px, env(safe-area-inset-top));
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      font-size: 18px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────────── */
+    .page-footer {
+      text-align: center;
+      padding: 32px 0 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: rgba(122, 98, 69, 0.6);
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Hidden inputs ───────────────────────────────────────────── */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+  </style>
+</head>
+<body>
+
+  <input type="file" id="photoInput" class="sr-only" accept="image/*" capture="environment" />
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Fermer">✕</button>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="Photo souvenir" />
+  </div>
+
+  <header class="header">
+    <div class="header-inner">
+      <div>
+        <div class="header-wordmark f-display">Marathon Éclair</div>
+        <div class="header-sub f-mono">MTL · 23 mai 2026</div>
+      </div>
+      <div id="countdown" class="countdown f-mono">J-35</div>
+    </div>
+    <nav class="nav-tabs" aria-label="Navigation principale">
+      <a href="#stops" class="nav-tab active">Arrêts</a>
+      <a href="classement.html" class="nav-tab">Récap</a>
+    </nav>
+  </header>
+
+  <main>
+
+    <section class="hero" aria-label="Introduction">
+      <p class="hero-eyebrow f-mono">Montréal · 23 mai 2026</p>
+      <h1 class="hero-title f-display">6 pâtisseries.<br/><em>Un seul jour.</em></h1>
+      <div class="hero-rule"></div>
+      <p class="hero-meta f-mono">
+        Ahuntsic → Plateau · ~4h<br/>
+        BIXI + métro + marche
+      </p>
+    </section>
+
+    <section class="route-section" aria-label="Itinéraires">
+      <a href="https://www.google.com/maps/dir/?api=1&origin=114+Rue+Fleury+O%2C+Montr%C3%A9al%2C+QC&destination=809+Avenue+Laurier+E%2C+Montr%C3%A9al%2C+QC&waypoints=2355+Rue+Beaubien+E%2C+Montr%C3%A9al%2C+QC%7C3444+Rue+Masson%2C+Montr%C3%A9al%2C+QC%7C3660+Rue+Saint-Denis%2C+Montr%C3%A9al%2C+QC%7C33+Avenue+du+Mont-Royal+E%2C+Montr%C3%A9al%2C+QC&travelmode=transit"
+         target="_blank" rel="noopener" class="btn-primary">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        Itinéraire complet
+      </a>
+      <div class="btn-grid">
+        <a href="https://www.google.com/maps/dir/?api=1&origin=114+Rue+Fleury+O%2C+Montr%C3%A9al%2C+QC&destination=809+Avenue+Laurier+E%2C+Montr%C3%A9al%2C+QC&waypoints=2355+Rue+Beaubien+E%2C+Montr%C3%A9al%2C+QC%7C3444+Rue+Masson%2C+Montr%C3%A9al%2C+QC%7C3660+Rue+Saint-Denis%2C+Montr%C3%A9al%2C+QC%7C33+Avenue+du+Mont-Royal+E%2C+Montr%C3%A9al%2C+QC&travelmode=bicycling"
+           target="_blank" rel="noopener" class="btn-secondary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg>
+          BIXI
+        </a>
+        <a href="https://www.google.com/maps/dir/?api=1&origin=114+Rue+Fleury+O%2C+Montr%C3%A9al%2C+QC&destination=809+Avenue+Laurier+E%2C+Montr%C3%A9al%2C+QC&waypoints=2355+Rue+Beaubien+E%2C+Montr%C3%A9al%2C+QC%7C3444+Rue+Masson%2C+Montr%C3%A9al%2C+QC%7C3660+Rue+Saint-Denis%2C+Montr%C3%A9al%2C+QC%7C33+Avenue+du+Mont-Royal+E%2C+Montr%C3%A9al%2C+QC&travelmode=walking"
+           target="_blank" rel="noopener" class="btn-secondary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><path d="M9 20l2-6 3 3 1-3 3-2M6 16l2-6 4-3"/></svg>
+          Marche
+        </a>
+      </div>
+    </section>
+
+    <section id="stops" aria-label="Les 6 arrêts">
+      <h2 class="section-heading f-display">Les 6 arrêts</h2>
+      <div id="stopsList"></div>
+    </section>
+
+    <footer class="page-footer">
+      Marathon Éclair · Montréal · 23 mai 2026
+    </footer>
+
+  </main>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

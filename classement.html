@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0c0805" />
+  <title>Récap · Marathon Éclair MTL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,400;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:           #0c0805;
+      --surface:      #161009;
+      --elevated:     #1f1510;
+      --gold:         #c4a35a;
+      --gold-bright:  #dbb96e;
+      --gold-dim:     rgba(196, 163, 90, 0.25);
+      --gold-glow:    rgba(196, 163, 90, 0.08);
+      --cream:        #ecdfc8;
+      --cream-dim:    #7a6245;
+      --green:        #2d6b47;
+      --green-bright: #4a9263;
+      --green-dim:    rgba(45, 107, 71, 0.25);
+      --border:       rgba(196, 163, 90, 0.1);
+      --border-mid:   rgba(196, 163, 90, 0.2);
+      --r:            16px;
+      --r-sm:         10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { background: var(--bg); }
+
+    body {
+      background: var(--bg);
+      color: var(--cream);
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: calc(env(safe-area-inset-bottom) + 32px);
+    }
+
+    a { text-decoration: none; color: inherit; }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+    .f-display { font-family: 'Cormorant Garamond', Georgia, serif; }
+    .f-mono    { font-family: 'JetBrains Mono', monospace; }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding-top: env(safe-area-inset-top);
+    }
+
+    .header-inner {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 14px 20px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-wordmark {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--gold-bright);
+      letter-spacing: -0.3px;
+    }
+
+    .header-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--cream-dim);
+      margin-top: 2px;
+    }
+
+    .back-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--cream-dim);
+      background: var(--surface);
+      border: 1px solid var(--border-mid);
+      padding: 7px 14px;
+      border-radius: 8px;
+      transition: color 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .back-btn:active { color: var(--gold); border-color: var(--gold-dim); }
+
+    .nav-tabs {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 0 20px 12px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .nav-tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--cream-dim);
+      transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .nav-tab.active {
+      background: var(--gold-glow);
+      color: var(--gold-bright);
+    }
+
+    /* ── Main ────────────────────────────────────────────────────── */
+    main {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ── Progress ────────────────────────────────────────────────── */
+    .progress-section {
+      padding: 28px 0 24px;
+    }
+
+    .progress-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+
+    .progress-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 42px;
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--cream);
+    }
+
+    .progress-title em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .progress-bar-wrap {
+      margin-top: 18px;
+      background: var(--surface);
+      border-radius: 4px;
+      height: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--gold-bright));
+      border-radius: 4px;
+      transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .progress-label {
+      margin-top: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--cream-dim);
+    }
+
+    /* ── Section heading ─────────────────────────────────────────── */
+    .section-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 16px;
+    }
+
+    .section-rule {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 28px 0;
+    }
+
+    /* ── Pâtisserie list ─────────────────────────────────────────── */
+    .patisserie-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .patisserie-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px 16px;
+      transition: border-color 0.15s;
+    }
+
+    .patisserie-row.is-visited {
+      border-color: rgba(74, 146, 99, 0.2);
+    }
+
+    .row-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: rgba(196, 163, 90, 0.2);
+      min-width: 36px;
+      text-align: right;
+      line-height: 1;
+    }
+
+    .patisserie-row.is-visited .row-num {
+      color: rgba(74, 146, 99, 0.5);
+    }
+
+    .row-info { flex: 1; min-width: 0; }
+
+    .row-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.2;
+    }
+
+    .row-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--cream-dim);
+      margin-top: 3px;
+    }
+
+    .row-visited-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--green-bright);
+      margin-top: 2px;
+    }
+
+    .row-links {
+      display: flex;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+
+    .link-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: var(--elevated);
+      border: 1px solid var(--border-mid);
+      color: var(--cream);
+      font-size: 10px;
+      font-weight: 500;
+      padding: 8px 10px;
+      border-radius: 8px;
+      min-width: 46px;
+      transition: border-color 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .link-btn:active { transform: scale(0.94); border-color: var(--gold-dim); }
+    .link-btn.disabled { opacity: 0.25; pointer-events: none; }
+    .link-btn svg { width: 15px; height: 15px; }
+
+    /* ── Timeline ─────────────────────────────────────────────────── */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 14px;
+      padding-bottom: 20px;
+      position: relative;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: 11px;
+      top: 24px;
+      bottom: 0;
+      width: 1px;
+      background: var(--border);
+    }
+
+    .timeline-item:last-child::before { display: none; }
+
+    .timeline-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--border-mid);
+      background: var(--surface);
+      flex-shrink: 0;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .timeline-dot.visited {
+      border-color: var(--green);
+      background: rgba(74, 146, 99, 0.15);
+    }
+
+    .timeline-dot svg { width: 11px; height: 11px; color: var(--green-bright); }
+
+    .timeline-content { flex: 1; padding-bottom: 4px; }
+
+    .timeline-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.2;
+    }
+
+    .timeline-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--cream-dim);
+      margin-top: 2px;
+    }
+
+    .timeline-time.checked {
+      color: var(--green-bright);
+    }
+
+    /* ── Photo gallery ───────────────────────────────────────────── */
+    .gallery-empty {
+      text-align: center;
+      padding: 32px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--cream-dim);
+    }
+
+    .gallery-stop {
+      margin-bottom: 24px;
+    }
+
+    .gallery-stop-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .gallery-stop-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--gold);
+      background: var(--gold-glow);
+      border: 1px solid var(--gold-dim);
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .gallery-img {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      object-fit: cover;
+      width: 100%;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: transform 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .gallery-img:active { transform: scale(0.95); }
+
+    /* ── Delete photo ────────────────────────────────────────────── */
+    .delete-photo-btn {
+      position: relative;
+    }
+
+    .gallery-img-wrap {
+      position: relative;
+    }
+
+    .gallery-img-wrap .delete-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      background: rgba(0,0,0,0.65);
+      border-radius: 50%;
+      color: #fff;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.15s;
+      border: none;
+    }
+
+    .gallery-img-wrap .delete-btn:active { background: rgba(180, 60, 60, 0.8); }
+
+    /* ── Lightbox ────────────────────────────────────────────────── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.93);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .lightbox.open { display: flex; }
+
+    .lightbox-img {
+      max-width: 100%;
+      max-height: 88vh;
+      border-radius: 12px;
+      object-fit: contain;
+    }
+
+    .lightbox-close {
+      position: fixed;
+      top: max(20px, env(safe-area-inset-top));
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      font-size: 18px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────────── */
+    .page-footer {
+      text-align: center;
+      padding: 32px 0 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: rgba(122, 98, 69, 0.6);
+      letter-spacing: 0.5px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Fermer">✕</button>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="Photo souvenir" />
+  </div>
+
+  <header class="header">
+    <div class="header-inner">
+      <div>
+        <div class="header-wordmark f-display">Récap du Marathon</div>
+        <div class="header-sub f-mono">MTL · 23 mai 2026</div>
+      </div>
+      <a href="index.html" class="back-btn f-mono">← Arrêts</a>
+    </div>
+    <nav class="nav-tabs">
+      <a href="index.html" class="nav-tab">Arrêts</a>
+      <a href="classement.html" class="nav-tab active">Récap</a>
+    </nav>
+  </header>
+
+  <main>
+
+    <!-- Progress -->
+    <section class="progress-section">
+      <p class="progress-eyebrow f-mono">Progression</p>
+      <h1 class="progress-title f-display"><em id="visitedCount">0</em> / 6</h1>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+      </div>
+      <p class="progress-label f-mono" id="progressLabel">0 pâtisserie visitée</p>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- Ordered list with links -->
+    <section aria-label="Liste des pâtisseries">
+      <h2 class="section-heading f-display">Les 6 pâtisseries</h2>
+      <div class="patisserie-list" id="patisserieList"></div>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- Timeline -->
+    <section aria-label="Parcours de la journée">
+      <h2 class="section-heading f-display">Parcours</h2>
+      <div class="timeline" id="timeline"></div>
+    </section>
+
+    <hr class="section-rule" />
+
+    <!-- Photo gallery -->
+    <section aria-label="Galerie photos">
+      <h2 class="section-heading f-display">Galerie souvenir</h2>
+      <div id="gallery"></div>
+    </section>
+
+    <footer class="page-footer">
+      Marathon Éclair · Montréal · 23 mai 2026
+    </footer>
+
+  </main>
+
+  <script src="assets/app.js"></script>
+  <script src="assets/classement.js"></script>
+</body>
+</html>
