@@ -909,22 +909,6 @@ function initEventDelegation() {
       return;
     }
 
-    // PDF modal actions
-    const pdfActionBtn = e.target.closest("[data-pdf-action]");
-    if (pdfActionBtn) {
-      const act = pdfActionBtn.dataset.pdfAction;
-      if (act === "download")  downloadPdf();
-      if (act === "messenger") sharePdfMessenger();
-      if (act === "close")     closePdfModal();
-      return;
-    }
-
-    // PDF modal overlay tap → dismiss
-    if (e.target.id === "pdfModalOverlay") {
-      closePdfModal();
-      return;
-    }
-
     // Add photo
     const addPhotoBtn = e.target.closest(".add-photo-btn");
     if (addPhotoBtn) {
@@ -1053,7 +1037,6 @@ document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   closeLightbox();
   closeShareDrawer();
-  closePdfModal();
 });
 
 // =============================================================================
@@ -1154,8 +1137,6 @@ function drawStarsPdf(pdf, x, y, value, max = 5, size = 2.2, gap = 2.6) {
     }
   }
 }
-
-let _pdfBlob = null;
 
 async function generatePDF() {
   const entries = buildRatedStops();
@@ -1295,79 +1276,21 @@ async function generatePDF() {
       }
     }
 
-    _pdfBlob = pdf.output("blob");
-    openPdfModal();
+    const blob = pdf.output("blob");
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bakerytrail-top-eclairs.pdf";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   } catch (e) {
     console.error(e);
     alert("Erreur PDF : " + (e && e.message ? e.message : "inconnue"));
   } finally {
     if (btn) { btn.disabled = false; btn.classList.remove("is-loading"); }
   }
-}
-
-function openPdfModal() {
-  const m = document.getElementById("pdfModalOverlay");
-  if (!m) return;
-  m.hidden = false;
-  document.body.style.overflow = "hidden";
-  requestAnimationFrame(() => requestAnimationFrame(() => m.classList.add("open")));
-}
-
-function closePdfModal() {
-  const m = document.getElementById("pdfModalOverlay");
-  if (!m) return;
-  m.classList.remove("open");
-  setTimeout(() => { m.hidden = true; document.body.style.overflow = ""; }, 280);
-}
-
-function downloadPdf() {
-  if (!_pdfBlob) return;
-  const url = URL.createObjectURL(_pdfBlob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "bakerytrail-top-eclairs.pdf";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
-  closePdfModal();
-}
-
-async function sharePdfMessenger() {
-  if (!_pdfBlob) return;
-  const file = new File([_pdfBlob], "bakerytrail-top-eclairs.pdf", { type: "application/pdf" });
-
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
-      await navigator.share({
-        title: "BakeryTrail — Top Éclairs",
-        text:  "Notre classement éclairs 🥐",
-        files: [file],
-      });
-      closePdfModal();
-      return;
-    } catch (e) {
-      if (e && e.name === "AbortError") return;
-      // fall through
-    }
-  }
-
-  // Fallback: download then open Messenger
-  const url = URL.createObjectURL(_pdfBlob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "bakerytrail-top-eclairs.pdf";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
-  closePdfModal();
-
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  setTimeout(() => {
-    if (isMobile) window.location.href = "fb-messenger://";
-    else openMessengerShare(SITE_URL);
-  }, 900);
 }
 
 // =============================================================================
