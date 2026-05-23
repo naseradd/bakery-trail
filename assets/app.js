@@ -279,6 +279,10 @@ const KEY_CHECKINS = "eclairs_mtl_checkins";
 const KEY_PHOTOS   = "eclairs_mtl_photos";
 const KEY_RATINGS  = "eclairs_mtl_ratings";
 
+const SITE_URL  = "https://naseradd.github.io/bakery-trail/";
+const FB_APP_ID = "966242223397117";
+const JSZIP_CDN = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
+
 const RATING_CRITERIA = [
   { id: "pate",         label: "Pâte" },
   { id: "ganache",      label: "Ganache" },
@@ -377,6 +381,123 @@ const ICON_CHECK = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" 
 const ICON_PIN = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
 const ICON_CAMERA = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
 const ICON_STAR = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+const ICON_SHARE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
+const ICON_DOWNLOAD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+const ICON_MESSENGER = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.36 2 2 6.13 2 11.7c0 2.91 1.19 5.44 3.14 7.17.16.14.26.34.27.55l.05 1.78a.8.8 0 0 0 1.12.71l1.99-.88c.16-.07.34-.08.5-.04.91.25 1.88.38 2.93.38 5.64 0 10-4.13 10-9.7S17.64 2 12 2zm6 7.46-2.93 4.65a1.5 1.5 0 0 1-2.17.4l-2.33-1.75a.6.6 0 0 0-.72 0l-3.15 2.39c-.42.32-.97-.18-.69-.63L9.93 9.87a1.5 1.5 0 0 1 2.17-.4l2.33 1.75c.21.16.51.16.72 0l3.15-2.39c.42-.32.97.18.7.63z"/></svg>`;
+
+// =============================================================================
+// SHARE / EXPORT HELPERS
+// =============================================================================
+function buildMessengerShareUrl(link) {
+  const p = new URLSearchParams({
+    link,
+    redirect_uri: link,
+    app_id: FB_APP_ID,
+  });
+  return `https://www.facebook.com/dialog/send?${p.toString()}`;
+}
+
+async function copyToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    try { await navigator.clipboard.writeText(text); return true; } catch {}
+  }
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch {}
+  document.body.removeChild(ta);
+  return ok;
+}
+
+function buildNotesShareText(stop, ratings) {
+  const r = ratings[stop.id] || {};
+  const lines = [`🥐 BakeryTrail · ${stop.name}`];
+  RATING_CRITERIA.forEach(c => {
+    const v = r[c.id];
+    if (v) lines.push(`⭐ ${c.label}: ${v}/5`);
+  });
+  if (lines.length === 1) lines.push("(aucune note saisie)");
+  lines.push("", SITE_URL);
+  return lines.join("\n");
+}
+
+let _jszipPromise = null;
+function loadJSZip() {
+  if (window.JSZip) return Promise.resolve(window.JSZip);
+  if (_jszipPromise) return _jszipPromise;
+  _jszipPromise = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = JSZIP_CDN;
+    s.async = true;
+    s.onload  = () => resolve(window.JSZip);
+    s.onerror = () => { _jszipPromise = null; reject(new Error("JSZip load failed")); };
+    document.head.appendChild(s);
+  });
+  return _jszipPromise;
+}
+
+async function downloadAllPhotosZip() {
+  const photos = getPhotos();
+  const total  = Object.values(photos).reduce((acc, arr) => acc + (arr ? arr.length : 0), 0);
+  if (total === 0) {
+    alert("Aucune photo à télécharger pour l'instant.");
+    return;
+  }
+
+  let JSZip;
+  try { JSZip = await loadJSZip(); }
+  catch { alert("Impossible de charger JSZip (réseau ?). Réessaie plus tard."); return; }
+
+  const zip = new JSZip();
+  for (const stop of PATISSERIES) {
+    const arr = photos[stop.id];
+    if (!arr || arr.length === 0) continue;
+    const folderName = `${String(stop.order).padStart(2, "0")}-${stop.id}`;
+    const folder = zip.folder(folderName);
+    arr.forEach((dataUrl, i) => {
+      const m = /^data:(image\/[a-zA-Z+]+);base64,(.+)$/.exec(dataUrl);
+      if (!m) return;
+      const ext = m[1].includes("png") ? "png" : m[1].includes("webp") ? "webp" : "jpg";
+      folder.file(`${String(i + 1).padStart(2, "0")}.${ext}`, m[2], { base64: true });
+    });
+  }
+
+  const blob = await zip.generateAsync({ type: "blob" });
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "marathon-eclair-mtl-photos.zip";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+function sharePhotosOnMessenger() {
+  const photos = getPhotos();
+  const total  = Object.values(photos).reduce((acc, arr) => acc + (arr ? arr.length : 0), 0);
+  const msg = total > 0
+    ? `Ouvre BakeryTrail pour voir mes ${total} photo${total > 1 ? "s" : ""} du Marathon Éclair MTL :\n${SITE_URL}`
+    : `Marathon Éclair MTL — 6 pâtisseries, 1 journée :\n${SITE_URL}`;
+  copyToClipboard(msg).then(() => {
+    alert("Message copié dans le presse-papier. Colle-le dans Messenger après l'envoi du lien.");
+    window.open(buildMessengerShareUrl(SITE_URL), "_blank", "noopener");
+  });
+}
+
+async function shareNotesOnMessenger(stopId) {
+  const stop = PATISSERIES.find(p => p.id === stopId);
+  if (!stop) return;
+  const text = buildNotesShareText(stop, getRatings());
+  await copyToClipboard(text);
+  alert("Notes copiées dans le presse-papier. Colle-les dans Messenger après l'envoi du lien.");
+  window.open(buildMessengerShareUrl(SITE_URL), "_blank", "noopener");
+}
 
 // =============================================================================
 // RATING FORM
@@ -561,6 +682,10 @@ function renderStops() {
     </div>
     ${checkinHtml}
     ${renderRatingForm(stop.id, ratings)}
+    <button class="share-notes-btn" data-share-notes="${stop.id}">
+      ${ICON_MESSENGER}
+      <span>Partager mes notes</span>
+    </button>
     <div class="photos-section">
       <div class="photos-label f-mono">Photos souvenir</div>
       <div class="photos-strip" id="photos-${stop.id}">
@@ -662,6 +787,25 @@ function initEventDelegation() {
     const starBtn = e.target.closest(".star-btn");
     if (starBtn) {
       handleStarClick(starBtn);
+      return;
+    }
+
+    // Per-stop notes share
+    const shareNotesBtn = e.target.closest("[data-share-notes]");
+    if (shareNotesBtn) {
+      shareNotesOnMessenger(shareNotesBtn.dataset.shareNotes);
+      return;
+    }
+
+    // Global "download all photos"
+    if (e.target.closest("#downloadPhotosBtn")) {
+      downloadAllPhotosZip();
+      return;
+    }
+
+    // Global "share on Messenger"
+    if (e.target.closest("#sharePhotosBtn")) {
+      sharePhotosOnMessenger();
       return;
     }
 
@@ -829,4 +973,8 @@ window.ECLAIRS_APP = {
   getRatings,
   saveRatings,
   buildPlaceUrl,
+  downloadAllPhotosZip,
+  sharePhotosOnMessenger,
+  shareNotesOnMessenger,
+  buildMessengerShareUrl,
 };
