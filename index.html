@@ -650,6 +650,123 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* ── Backups (Plan B) ────────────────────────────────────────── */
+    .backups-section {
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .backups-intro {
+      text-align: center;
+      margin-bottom: 22px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--cream-dim);
+      letter-spacing: 0.3px;
+      line-height: 1.6;
+    }
+
+    .backup-group {
+      margin-bottom: 28px;
+    }
+
+    .backup-group-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 4px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .backup-group-header .stop-num {
+      font-size: 32px;
+      min-width: 36px;
+      color: var(--gold);
+      padding-top: 0;
+      text-align: left;
+    }
+
+    .backup-group-info { flex: 1; min-width: 0; }
+
+    .backup-group-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.2;
+    }
+
+    .backup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      opacity: 0;
+      animation: fadeUp 0.35s ease forwards;
+    }
+
+    .backup-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .backup-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.2;
+    }
+
+    .backup-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .eclair-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .eclair-badge-yes {
+      background: rgba(74, 146, 99, 0.12);
+      border: 1px solid var(--green-dim);
+      color: var(--green-bright);
+    }
+
+    .eclair-badge-maybe {
+      background: var(--gold-glow);
+      border: 1px solid var(--gold-dim);
+      color: var(--gold);
+    }
+
+    .backup-card .action-row {
+      margin-top: 10px;
+      margin-bottom: 0;
+    }
+
+    .backup-card .stop-note {
+      margin-top: 4px;
+      margin-bottom: 0;
+    }
+
     /* ── Footer ──────────────────────────────────────────────────── */
     .page-footer {
       text-align: center;
@@ -689,6 +806,7 @@
     </div>
     <nav class="nav-tabs" aria-label="Navigation principale">
       <a href="#stops" class="nav-tab active">Arrêts</a>
+      <a href="#backups" class="nav-tab">Backup</a>
       <a href="classement.html" class="nav-tab">Récap</a>
     </nav>
   </header>
@@ -728,6 +846,15 @@
     <section id="stops" aria-label="Les 6 arrêts">
       <h2 class="section-heading f-display">Les 6 arrêts</h2>
       <div id="stopsList"></div>
+    </section>
+
+    <section id="backups" class="backups-section" aria-label="Backups par arrêt">
+      <h2 class="section-heading f-display">Plan B</h2>
+      <p class="backups-intro">
+        Pâtisseries de secours proches · si fermé ou rupture<br/>
+        <span style="color: var(--green-bright);">✓ Éclair confirmé</span> · <span style="color: var(--gold);">À vérifier sur place</span>
+      </p>
+      <div id="backupsList"></div>
     </section>
 
     <footer class="page-footer">

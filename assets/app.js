@@ -110,6 +110,168 @@ const PATISSERIES = [
 ];
 
 // =============================================================================
+// BACKUPS — pâtisseries de secours faisant des éclairs, proches de chaque stop
+// =============================================================================
+const BACKUPS = {
+  la_bete_a_pain: [
+    {
+      name: "Fabrique Caramel",
+      address: "1308 Rue Fleury Est, Montréal",
+      neighborhood: "Ahuntsic",
+      website: "https://www.fabriquecaramel.com/",
+      eclairConfirmed: true,
+      note: "Éclairs cerise + signature caramel salé. Même rue Fleury, à pied.",
+    },
+    {
+      name: "La Petite Boulangerie",
+      address: "Rue Fleury, Montréal",
+      neighborhood: "Ahuntsic",
+      website: null,
+      eclairConfirmed: false,
+      note: "20+ ans sur Fleury. Classiques FR, vérifier dispo éclair sur place.",
+    },
+    {
+      name: "Le Pain dans les Voiles",
+      address: "357 Rue de Castelnau E, Montréal",
+      neighborhood: "Villeray",
+      website: "https://lepaindanslesvoiles.com",
+      eclairConfirmed: false,
+      note: "Pâtisseries saisonnières. Vérifier dispo éclair sur place.",
+    },
+    {
+      name: "Première Moisson",
+      address: "1271 Rue Fleury E, Montréal",
+      neighborhood: "Ahuntsic",
+      website: "https://premieremoisson.com",
+      eclairConfirmed: true,
+      note: "Chaîne fiable, éclair classique chocolat. Filet de sécurité.",
+    },
+  ],
+  de_froment_seve: [
+    {
+      name: "Pâtisserie Madeleine",
+      address: "2105 Rue Beaubien E, Montréal",
+      neighborhood: "Rosemont",
+      website: "https://patisseriemadeleine.ca/",
+      eclairConfirmed: true,
+      note: "Même rue Beaubien — couple FR Champagne. Éclair chocolat glaçage + Paris-Brest.",
+    },
+    {
+      name: "Pâtisserie L'Éclaircie",
+      address: "6600 Rue Saint-Hubert, Montréal",
+      neighborhood: "Rosemont-La-Petite-Patrie",
+      website: "https://patisserieleclaircie.com/",
+      eclairConfirmed: true,
+      note: "Spécialiste éclairs (\"Les meilleurs éclairs en ville\"). Café 2e étage.",
+    },
+    {
+      name: "Pâtisserie Rosário",
+      address: "Rosemont-La-Petite-Patrie, Montréal",
+      neighborhood: "Rosemont",
+      website: null,
+      eclairConfirmed: false,
+      note: "Top liste cake shops Rosemont. Vérifier sur place.",
+    },
+    {
+      name: "Automne Boulangerie",
+      address: "6500 Rue Saint-Hubert, Montréal",
+      neighborhood: "Petite-Patrie",
+      website: "https://automneboulangerie.com",
+      eclairConfirmed: false,
+      note: "Inspiration scandinave. Pain + pâtisseries.",
+    },
+  ],
+  alex_platel_rosemont: [
+    {
+      name: "Pâtisserie Madeleine",
+      address: "2105 Rue Beaubien E, Montréal",
+      neighborhood: "Rosemont",
+      website: "https://patisseriemadeleine.ca/",
+      eclairConfirmed: true,
+      note: "~10 min marche depuis Masson. Éclair chocolat classique FR.",
+    },
+    {
+      name: "Pâtisserie L'Éclaircie",
+      address: "6600 Rue Saint-Hubert, Montréal",
+      neighborhood: "Rosemont-La-Petite-Patrie",
+      website: "https://patisserieleclaircie.com/",
+      eclairConfirmed: true,
+      note: "Spécialiste éclairs. Métro Rosemont.",
+    },
+    {
+      name: "Café Dei Campi",
+      address: "41 Rue Beaubien E, Montréal",
+      neighborhood: "Petite-Patrie",
+      website: null,
+      eclairConfirmed: false,
+      note: "Italien, pâtisseries maison. Backup atypique.",
+    },
+  ],
+  mamie_clafoutis: [
+    {
+      name: "Pâtisserie Rhubarbe",
+      address: "1479 Avenue Laurier E, Montréal",
+      neighborhood: "Plateau-Mont-Royal",
+      website: null,
+      eclairConfirmed: false,
+      note: "Top-tier Plateau. Signatures = tarte citron, millefeuille. Classiques FR possibles.",
+    },
+    {
+      name: "Boulangerie Guillaume",
+      address: "5134 Boulevard Saint-Laurent, Montréal",
+      neighborhood: "Mile-End",
+      website: "https://guillau.me/en",
+      eclairConfirmed: false,
+      note: "Tradition FR + pâtisseries. Plus loin (Mile-End).",
+    },
+    {
+      name: "Pâtisserie Zébulon",
+      address: "5325 Avenue du Parc, Montréal",
+      neighborhood: "Plateau",
+      website: null,
+      eclairConfirmed: false,
+      note: "100% vegan. Éclair vegan possible. Niche.",
+    },
+  ],
+  mont_eclair: [
+    {
+      name: "Pâtisserie Rhubarbe",
+      address: "1479 Avenue Laurier E, Montréal",
+      neighborhood: "Plateau-Mont-Royal",
+      website: null,
+      eclairConfirmed: false,
+      note: "~10 min à pied. Top-tier Plateau, classiques FR.",
+    },
+    {
+      name: "Les Co'Pains d'abord",
+      address: "418 Rue Rachel E, Montréal",
+      neighborhood: "Plateau-Mont-Royal",
+      website: null,
+      eclairConfirmed: false,
+      note: "Top liste boulangeries Plateau. Vérifier dispo éclair.",
+    },
+  ],
+  fous_desserts: [
+    {
+      name: "Pâtisserie Rhubarbe",
+      address: "1479 Avenue Laurier E, Montréal",
+      neighborhood: "Plateau-Mont-Royal",
+      website: null,
+      eclairConfirmed: false,
+      note: "MÊME RUE Laurier E, ~700m à pied. Backup #1 géographique.",
+    },
+    {
+      name: "Hof Kelsten",
+      address: "4524 Boulevard Saint-Laurent, Montréal",
+      neighborhood: "Plateau",
+      website: "https://hofkelsten.com/",
+      eclairConfirmed: false,
+      note: "Boulangerie gastronomique. Croissants top MTL + pâtisseries FR/Juives.",
+    },
+  ],
+};
+
+// =============================================================================
 // CONFIG
 // =============================================================================
 const EVENT_DATE = new Date("2026-05-23T11:15:00-04:00");
@@ -366,6 +528,71 @@ function renderStops() {
 }
 
 // =============================================================================
+// RENDER BACKUPS
+// =============================================================================
+function buildBackupMapsUrl(backup) {
+  const q = encodeURIComponent(`${backup.name}, ${backup.address}`);
+  return `https://www.google.com/maps/search/?api=1&query=${q}`;
+}
+
+function renderBackups() {
+  const container = document.getElementById("backupsList");
+  if (!container) return;
+
+  container.innerHTML = PATISSERIES.map(stop => {
+    const backups = BACKUPS[stop.id] || [];
+    if (backups.length === 0) return "";
+
+    const backupsHtml = backups.map(b => {
+      const mapsUrl = buildBackupMapsUrl(b);
+      const websiteHtml = b.website
+        ? `<a href="${b.website}" target="_blank" rel="noopener" class="btn-icon" title="Site web">
+             ${ICON_GLOBE}
+             <span>Site</span>
+           </a>`
+        : `<div class="btn-icon disabled" aria-hidden="true">
+             ${ICON_GLOBE}
+             <span>—</span>
+           </div>`;
+      const badgeClass = b.eclairConfirmed ? "eclair-badge-yes" : "eclair-badge-maybe";
+      const badgeText  = b.eclairConfirmed ? "Éclair ✓"        : "À vérifier";
+
+      return `
+<article class="backup-card">
+  <div class="backup-card-header">
+    <div class="backup-name f-display">${b.name}</div>
+    <span class="eclair-badge ${badgeClass}">${badgeText}</span>
+  </div>
+  <div class="backup-details">
+    <span class="stop-detail">${b.neighborhood}</span>
+    <span class="stop-detail">${b.address}</span>
+  </div>
+  ${b.note ? `<p class="stop-note">${b.note}</p>` : ""}
+  <div class="action-row">
+    <a href="${mapsUrl}" target="_blank" rel="noopener" class="btn-maps">
+      ${ICON_NAV}
+      Maps
+    </a>
+    ${websiteHtml}
+  </div>
+</article>`;
+    }).join("");
+
+    return `
+<div class="backup-group">
+  <div class="backup-group-header">
+    <div class="stop-num f-display">${String(stop.order).padStart(2, "0")}</div>
+    <div class="backup-group-info">
+      <div class="backup-group-title f-display">Plan B · ${stop.name}</div>
+      <div class="stop-detail">${stop.neighborhood} · ${stop.address}</div>
+    </div>
+  </div>
+  ${backupsHtml}
+</div>`;
+  }).join("");
+}
+
+// =============================================================================
 // EVENT DELEGATION (single listener — avoids stale handlers after re-render)
 // =============================================================================
 let currentPhotoStopId = null;
@@ -502,6 +729,7 @@ document.addEventListener("DOMContentLoaded", () => {
   updateCountdown();
   setInterval(updateCountdown, 60000);
   renderStops();
+  renderBackups();
   initEventDelegation();
   scrollToNextStop();
 });
