@@ -903,6 +903,28 @@ function initEventDelegation() {
       return;
     }
 
+    // PDF report trigger (header)
+    if (e.target.closest("#pdfReportBtn")) {
+      generatePDF();
+      return;
+    }
+
+    // PDF modal actions
+    const pdfActionBtn = e.target.closest("[data-pdf-action]");
+    if (pdfActionBtn) {
+      const act = pdfActionBtn.dataset.pdfAction;
+      if (act === "download")  downloadPdf();
+      if (act === "messenger") sharePdfMessenger();
+      if (act === "close")     closePdfModal();
+      return;
+    }
+
+    // PDF modal overlay tap → dismiss
+    if (e.target.id === "pdfModalOverlay") {
+      closePdfModal();
+      return;
+    }
+
     // Add photo
     const addPhotoBtn = e.target.closest(".add-photo-btn");
     if (addPhotoBtn) {
@@ -1031,6 +1053,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   closeLightbox();
   closeShareDrawer();
+  closePdfModal();
 });
 
 // =============================================================================
@@ -1058,6 +1081,296 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // =============================================================================
+// PDF REPORT — "Top Éclairs"
+// =============================================================================
+const PDF_CDN = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+let _jspdfPromise = null;
+
+function loadJsPdf() {
+  if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+  if (_jspdfPromise) return _jspdfPromise;
+  _jspdfPromise = new Promise((resolve, reject) => {
+    const existing = Array.from(document.scripts).find(s => s.src === PDF_CDN);
+    const onReady = () => {
+      if (window.jspdf && window.jspdf.jsPDF) resolve(window.jspdf.jsPDF);
+      else reject(new Error("jsPDF non disponible après chargement"));
+    };
+    if (existing) { existing.addEventListener("load", onReady, { once: true }); return; }
+    const s = document.createElement("script");
+    s.src = PDF_CDN;
+    s.async = true;
+    s.onload = onReady;
+    s.onerror = () => { _jspdfPromise = null; reject(new Error("Impossible de charger jsPDF")); };
+    document.head.appendChild(s);
+  });
+  return _jspdfPromise;
+}
+
+function avgRating(r) {
+  const vals = Object.values(r).filter(v => typeof v === "number" && v > 0);
+  if (!vals.length) return 0;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+function buildRatedStops() {
+  const ratings = getRatings();
+  const entries = PATISSERIES
+    .map(s => ({ stop: s, ratings: ratings[s.id] || {} }))
+    .filter(x => Object.values(x.ratings).some(v => typeof v === "number" && v > 0));
+  entries.sort((a, b) => {
+    const ag = a.ratings.globale || avgRating(a.ratings);
+    const bg = b.ratings.globale || avgRating(b.ratings);
+    return bg - ag;
+  });
+  return entries;
+}
+
+function resizePhotoForPdf(dataUrl, maxW = 900) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(maxW / img.width, 1);
+      const c = document.createElement("canvas");
+      c.width  = Math.max(1, Math.round(img.width  * scale));
+      c.height = Math.max(1, Math.round(img.height * scale));
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      resolve({ data: c.toDataURL("image/jpeg", 0.82), w: c.width, h: c.height });
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
+function drawStarsPdf(pdf, x, y, value, max = 5, size = 2.2, gap = 2.6) {
+  for (let i = 0; i < max; i++) {
+    const cx = x + i * (size * 2 + gap);
+    if (i < value) {
+      pdf.setFillColor(245, 197, 24);
+      pdf.circle(cx, y, size, "F");
+    } else {
+      pdf.setDrawColor(212, 196, 168);
+      pdf.setLineWidth(0.35);
+      pdf.circle(cx, y, size, "S");
+    }
+  }
+}
+
+let _pdfBlob = null;
+
+async function generatePDF() {
+  const entries = buildRatedStops();
+  if (!entries.length) {
+    alert("Aucune note saisie. Note au moins une pâtisserie pour générer le rapport.");
+    return;
+  }
+  const btn = document.getElementById("pdfReportBtn");
+  if (btn) { btn.disabled = true; btn.classList.add("is-loading"); }
+  try {
+    const JsPDF = await loadJsPdf();
+    const pdf = new JsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    const W = pdf.internal.pageSize.getWidth();
+    const H = pdf.internal.pageSize.getHeight();
+
+    // ── Cover ──────────────────────────────────────────────
+    pdf.setFillColor(253, 246, 236);
+    pdf.rect(0, 0, W, H, "F");
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(54);
+    pdf.setTextColor(245, 197, 24);
+    pdf.text("BakeryTrail", W / 2, H / 2 - 24, { align: "center" });
+
+    pdf.setFillColor(245, 197, 24);
+    pdf.rect(W / 2 - 18, H / 2 - 14, 36, 0.8, "F");
+
+    pdf.setFont("helvetica", "italic");
+    pdf.setFontSize(28);
+    pdf.setTextColor(42, 29, 16);
+    pdf.text("Top Éclairs", W / 2, H / 2 - 2, { align: "center" });
+
+    const dateStr = new Date().toLocaleDateString("fr-CA", {
+      year: "numeric", month: "long", day: "numeric",
+    });
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(13);
+    pdf.setTextColor(107, 85, 54);
+    pdf.text(dateStr, W / 2, H / 2 + 18, { align: "center" });
+    pdf.text(
+      `${entries.length} lieu${entries.length > 1 ? "x" : ""} évalué${entries.length > 1 ? "s" : ""}`,
+      W / 2, H / 2 + 27, { align: "center" }
+    );
+
+    pdf.setFontSize(9);
+    pdf.setTextColor(179, 152, 115);
+    pdf.text("Marathon Éclair · Montréal · 23 mai 2026", W / 2, H - 18, { align: "center" });
+
+    // ── Per-stop pages ─────────────────────────────────────
+    const photosMap = getPhotos();
+    const critOrder = ["pate", "ganache", "qualite_prix", "visuel", "fraicheur", "glacage"];
+
+    for (let i = 0; i < entries.length; i++) {
+      pdf.addPage();
+      pdf.setFillColor(253, 246, 236);
+      pdf.rect(0, 0, W, H, "F");
+
+      const { stop, ratings } = entries[i];
+      const globale = ratings.globale || Math.round(avgRating(ratings));
+      const M = 18;
+      let y = M + 6;
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.setTextColor(245, 197, 24);
+      pdf.text(`#${i + 1} SUR ${entries.length}`, M, y);
+      y += 9;
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(26);
+      pdf.setTextColor(42, 29, 16);
+      pdf.text(stop.name, M, y);
+      y += 7;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(10);
+      pdf.setTextColor(107, 85, 54);
+      pdf.text(`${stop.neighborhood} · ${stop.address}`, M, y);
+      y += 10;
+
+      // Globale highlight box
+      const boxH = 18;
+      pdf.setFillColor(255, 248, 231);
+      pdf.setDrawColor(245, 197, 24);
+      pdf.setLineWidth(0.4);
+      pdf.roundedRect(M, y, W - M * 2, boxH, 3, 3, "FD");
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.setTextColor(107, 85, 54);
+      pdf.text("NOTE GLOBALE", M + 6, y + 6.5);
+      drawStarsPdf(pdf, M + 9, y + 13, globale);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(15);
+      pdf.setTextColor(42, 29, 16);
+      pdf.text(globale > 0 ? `${globale}/5` : "—", W - M - 6, y + 11.5, { align: "right" });
+      y += boxH + 8;
+
+      // Criteria rows
+      for (const cid of critOrder) {
+        const c = RATING_CRITERIA.find(x => x.id === cid);
+        if (!c) continue;
+        const v = ratings[cid] || 0;
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(11);
+        pdf.setTextColor(42, 29, 16);
+        pdf.text(c.label, M, y);
+        drawStarsPdf(pdf, M + 62, y - 1.2, v);
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(10);
+        pdf.setTextColor(107, 85, 54);
+        pdf.text(v > 0 ? `${v}/5` : "—", W - M, y, { align: "right" });
+        y += 3;
+        pdf.setDrawColor(239, 226, 197);
+        pdf.setLineWidth(0.2);
+        pdf.line(M, y, W - M, y);
+        y += 6;
+      }
+      y += 4;
+
+      // Photos (max 2)
+      const stopPhotos = (photosMap[stop.id] || []).slice(0, 2);
+      if (stopPhotos.length) {
+        const photoW = (W - M * 2 - 8) / 2;
+        const photoH = photoW * 0.72;
+        if (y + photoH <= H - M) {
+          for (let p = 0; p < stopPhotos.length; p++) {
+            const resized = await resizePhotoForPdf(stopPhotos[p]);
+            if (!resized) continue;
+            const px = M + p * (photoW + 8);
+            try {
+              pdf.addImage(resized.data, "JPEG", px, y, photoW, photoH, undefined, "FAST");
+            } catch (err) {
+              console.warn("addImage failed", err);
+            }
+          }
+        }
+      }
+    }
+
+    _pdfBlob = pdf.output("blob");
+    openPdfModal();
+  } catch (e) {
+    console.error(e);
+    alert("Erreur PDF : " + (e && e.message ? e.message : "inconnue"));
+  } finally {
+    if (btn) { btn.disabled = false; btn.classList.remove("is-loading"); }
+  }
+}
+
+function openPdfModal() {
+  const m = document.getElementById("pdfModalOverlay");
+  if (!m) return;
+  m.hidden = false;
+  document.body.style.overflow = "hidden";
+  requestAnimationFrame(() => requestAnimationFrame(() => m.classList.add("open")));
+}
+
+function closePdfModal() {
+  const m = document.getElementById("pdfModalOverlay");
+  if (!m) return;
+  m.classList.remove("open");
+  setTimeout(() => { m.hidden = true; document.body.style.overflow = ""; }, 280);
+}
+
+function downloadPdf() {
+  if (!_pdfBlob) return;
+  const url = URL.createObjectURL(_pdfBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "bakerytrail-top-eclairs.pdf";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  closePdfModal();
+}
+
+async function sharePdfMessenger() {
+  if (!_pdfBlob) return;
+  const file = new File([_pdfBlob], "bakerytrail-top-eclairs.pdf", { type: "application/pdf" });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        title: "BakeryTrail — Top Éclairs",
+        text:  "Notre classement éclairs 🥐",
+        files: [file],
+      });
+      closePdfModal();
+      return;
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      // fall through
+    }
+  }
+
+  // Fallback: download then open Messenger
+  const url = URL.createObjectURL(_pdfBlob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "bakerytrail-top-eclairs.pdf";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  closePdfModal();
+
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  setTimeout(() => {
+    if (isMobile) window.location.href = "fb-messenger://";
+    else openMessengerShare(SITE_URL);
+  }, 900);
+}
+
+// =============================================================================
 // EXPOSE — used by classement.html
 // =============================================================================
 window.ECLAIRS_APP = {
@@ -1075,4 +1388,5 @@ window.ECLAIRS_APP = {
   openMessengerShare,
   openShareDrawer,
   closeShareDrawer,
+  generatePDF,
 };
