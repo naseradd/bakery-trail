@@ -463,6 +463,39 @@ function extFromDataUrl(dataUrl) {
   return "jpg";
 }
 
+// Convert data URI → Blob (in-memory, no network)
+async function dataUrlToBlob(dataUrl) {
+  const res = await fetch(dataUrl);
+  return res.blob();
+}
+
+// Save one photo: Web Share API on iOS (share sheet → Save Image),
+// fallback to blob URL + <a download> on Android/desktop.
+// Returns "shared" | "downloaded" | "aborted".
+async function savePhotoBlob(blob, filename) {
+  const file = new File([blob], filename, { type: blob.type || "image/jpeg" });
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ title: "Photo éclair", files: [file] });
+      return "shared";
+    } catch (e) {
+      if (e && e.name === "AbortError") return "aborted";
+      // fall through to fallback
+    }
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  return "downloaded";
+}
+
 async function downloadAllPhotos() {
   const photos = getPhotos();
   const total  = Object.values(photos).reduce((acc, arr) => acc + (arr ? arr.length : 0), 0);
@@ -479,17 +512,16 @@ async function downloadAllPhotos() {
     if (!arr || arr.length === 0) continue;
     for (let i = 0; i < arr.length; i++) {
       const dataUrl = arr[i];
-      const ext = extFromDataUrl(dataUrl);
+      const ext  = extFromDataUrl(dataUrl);
       const name = `eclair-${String(stop.order).padStart(2, "0")}-${stop.id}-${String(i + 1).padStart(2, "0")}.${ext}`;
-      const a = document.createElement("a");
-      a.href = dataUrl;
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      // Stagger to give the browser room — many browsers throttle rapid
-      // synchronous downloads triggered from a single user gesture.
-      await new Promise(r => setTimeout(r, 250));
+      try {
+        const blob   = await dataUrlToBlob(dataUrl);
+        const result = await savePhotoBlob(blob, name);
+        if (result === "aborted") return; // user dismissed share sheet → stop sequence
+      } catch (err) {
+        console.warn("Photo save failed", name, err);
+      }
+      await new Promise(r => setTimeout(r, 300));
     }
   }
 }
@@ -504,15 +536,16 @@ async function downloadStopPhotos(stopId) {
   }
   for (let i = 0; i < arr.length; i++) {
     const dataUrl = arr[i];
-    const ext = extFromDataUrl(dataUrl);
+    const ext  = extFromDataUrl(dataUrl);
     const name = `eclair-${String(stop.order).padStart(2, "0")}-${stop.id}-${String(i + 1).padStart(2, "0")}.${ext}`;
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    await new Promise(r => setTimeout(r, 250));
+    try {
+      const blob   = await dataUrlToBlob(dataUrl);
+      const result = await savePhotoBlob(blob, name);
+      if (result === "aborted") return;
+    } catch (err) {
+      console.warn("Photo save failed", name, err);
+    }
+    await new Promise(r => setTimeout(r, 300));
   }
 }
 
