@@ -602,6 +602,73 @@
     .add-photo-btn:active { border-color: var(--gold); color: var(--gold); transform: scale(0.95); }
     .add-photo-btn svg { width: 22px; height: 22px; }
 
+    /* ── Rating form ─────────────────────────────────────────────── */
+    .rating-section {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .rating-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--cream-dim);
+      margin-bottom: 8px;
+    }
+
+    .rating-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(196, 163, 90, 0.05);
+    }
+
+    .rating-row:last-child { border-bottom: none; }
+
+    .rating-row--overall {
+      margin-top: 4px;
+      padding-top: 11px;
+      border-top: 1px dashed var(--gold-dim);
+      border-bottom: none;
+    }
+
+    .rating-row--overall .rating-label {
+      color: var(--gold-bright);
+      font-weight: 700;
+    }
+
+    .rating-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--cream);
+      flex-shrink: 0;
+    }
+
+    .stars {
+      display: flex;
+      gap: 2px;
+    }
+
+    .star-btn {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(196, 163, 90, 0.2);
+      padding: 0;
+      transition: color 0.12s, transform 0.08s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .star-btn svg { width: 22px; height: 22px; }
+    .star-btn:active { transform: scale(0.85); }
+    .star-btn.filled { color: var(--gold-bright); }
+
     /* ── Notes card ──────────────────────────────────────────────── */
     .stop-note {
       margin-top: 12px;
@@ -737,6 +804,6 @@
 
   </main>
 
-  <script src="assets/app.js?v=2"></script>
+  <script src="assets/app.js?v=3"></script>
 </body>
 </html>
