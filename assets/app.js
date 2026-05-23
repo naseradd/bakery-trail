@@ -494,16 +494,26 @@ async function downloadAllPhotos() {
   }
 }
 
-function sharePhotosOnMessenger() {
-  const photos = getPhotos();
-  const total  = Object.values(photos).reduce((acc, arr) => acc + (arr ? arr.length : 0), 0);
-  const msg = total > 0
-    ? `Ouvre BakeryTrail pour voir mes ${total} photo${total > 1 ? "s" : ""} du Marathon Éclair MTL :\n${SITE_URL}`
-    : `Marathon Éclair MTL — 6 pâtisseries, 1 journée :\n${SITE_URL}`;
-  copyToClipboard(msg).then(() => {
-    alert("Message copié dans le presse-papier. Colle-le dans Messenger après l'envoi du lien.");
-    openMessengerShare(SITE_URL);
-  });
+async function downloadStopPhotos(stopId) {
+  const stop = PATISSERIES.find(p => p.id === stopId);
+  if (!stop) return;
+  const arr = getPhotos()[stopId] || [];
+  if (arr.length === 0) {
+    alert("Aucune photo pour ce lieu.");
+    return;
+  }
+  for (let i = 0; i < arr.length; i++) {
+    const dataUrl = arr[i];
+    const ext = extFromDataUrl(dataUrl);
+    const name = `eclair-${String(stop.order).padStart(2, "0")}-${stop.id}-${String(i + 1).padStart(2, "0")}.${ext}`;
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    await new Promise(r => setTimeout(r, 250));
+  }
 }
 
 async function shareNotesOnMessenger(stopId) {
@@ -513,6 +523,67 @@ async function shareNotesOnMessenger(stopId) {
   await copyToClipboard(text);
   alert("Notes copiées dans le presse-papier. Colle-les dans Messenger après l'envoi du lien.");
   openMessengerShare(SITE_URL);
+}
+
+// =============================================================================
+// SHARE DRAWER (per-stop bottom sheet)
+// =============================================================================
+let _drawerStopId = null;
+
+function openShareDrawer(stopId) {
+  const stop = PATISSERIES.find(p => p.id === stopId);
+  if (!stop) return;
+  _drawerStopId = stopId;
+
+  const overlay = document.getElementById("drawerOverlay");
+  const title   = document.getElementById("drawerTitle");
+  if (!overlay || !title) return;
+
+  title.textContent = `Partager · ${stop.name}`;
+  overlay.hidden = false;
+  document.body.style.overflow = "hidden";
+  // Force reflow then animate in
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => overlay.classList.add("open"));
+  });
+}
+
+function closeShareDrawer() {
+  const overlay = document.getElementById("drawerOverlay");
+  if (!overlay) return;
+  overlay.classList.remove("open");
+  setTimeout(() => {
+    overlay.hidden = true;
+    document.body.style.overflow = "";
+    _drawerStopId = null;
+  }, 280);
+}
+
+async function handleDrawerAction(action) {
+  if (!_drawerStopId) return;
+  const stopId = _drawerStopId;
+  const stop = PATISSERIES.find(p => p.id === stopId);
+  if (!stop) return;
+
+  if (action === "copy") {
+    const text = buildNotesShareText(stop, getRatings());
+    closeShareDrawer();
+    const ok = await copyToClipboard(text);
+    alert(ok ? "Notes copiées dans le presse-papier." : "Impossible de copier les notes.");
+    return;
+  }
+
+  if (action === "photos") {
+    closeShareDrawer();
+    await downloadStopPhotos(stopId);
+    return;
+  }
+
+  if (action === "messenger") {
+    closeShareDrawer();
+    await shareNotesOnMessenger(stopId);
+    return;
+  }
 }
 
 // =============================================================================
@@ -698,9 +769,9 @@ function renderStops() {
     </div>
     ${checkinHtml}
     ${renderRatingForm(stop.id, ratings)}
-    <button class="share-notes-btn" data-share-notes="${stop.id}">
-      ${ICON_MESSENGER}
-      <span>Partager mes notes</span>
+    <button class="share-trigger-btn" data-share-stop="${stop.id}" type="button">
+      ${ICON_SHARE}
+      <span>Partager</span>
     </button>
     <div class="photos-section">
       <div class="photos-label f-mono">Photos souvenir</div>
@@ -806,22 +877,29 @@ function initEventDelegation() {
       return;
     }
 
-    // Per-stop notes share
-    const shareNotesBtn = e.target.closest("[data-share-notes]");
-    if (shareNotesBtn) {
-      shareNotesOnMessenger(shareNotesBtn.dataset.shareNotes);
+    // Per-stop drawer trigger
+    const shareStopBtn = e.target.closest("[data-share-stop]");
+    if (shareStopBtn) {
+      openShareDrawer(shareStopBtn.dataset.shareStop);
       return;
     }
 
-    // Global "download all photos"
-    if (e.target.closest("#downloadPhotosBtn")) {
+    // Drawer action buttons
+    const drawerBtn = e.target.closest("[data-drawer-action]");
+    if (drawerBtn) {
+      handleDrawerAction(drawerBtn.dataset.drawerAction);
+      return;
+    }
+
+    // Drawer overlay or close button → dismiss
+    if (e.target.id === "drawerOverlay" || e.target.closest("#drawerClose")) {
+      closeShareDrawer();
+      return;
+    }
+
+    // Global download FAB
+    if (e.target.closest("#downloadAllFab")) {
       downloadAllPhotos();
-      return;
-    }
-
-    // Global "share on Messenger"
-    if (e.target.closest("#sharePhotosBtn")) {
-      sharePhotosOnMessenger();
       return;
     }
 
@@ -948,9 +1026,11 @@ function closeLightbox() {
   document.body.style.overflow = "";
 }
 
-// Close lightbox on Escape
+// Close lightbox / drawer on Escape
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeLightbox();
+  if (e.key !== "Escape") return;
+  closeLightbox();
+  closeShareDrawer();
 });
 
 // =============================================================================
@@ -990,7 +1070,9 @@ window.ECLAIRS_APP = {
   saveRatings,
   buildPlaceUrl,
   downloadAllPhotos,
-  sharePhotosOnMessenger,
+  downloadStopPhotos,
   shareNotesOnMessenger,
   openMessengerShare,
+  openShareDrawer,
+  closeShareDrawer,
 };
