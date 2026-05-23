@@ -489,6 +489,169 @@
       overflow: hidden;
       clip: rect(0, 0, 0, 0);
     }
+
+    /* ── Report CTA ──────────────────────────────────────────────── */
+    .report-cta { margin: 24px 0 0; }
+
+    .report-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      background: var(--gold);
+      color: #0c0805;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 16px;
+      border-radius: var(--r);
+      letter-spacing: -0.2px;
+      transition: opacity 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .report-btn:active { transform: scale(0.98); opacity: 0.88; }
+    .report-btn:disabled { opacity: 0.5; pointer-events: none; }
+    .report-btn .report-emoji { font-size: 18px; line-height: 1; }
+
+    /* ── PDF loader ──────────────────────────────────────────────── */
+    .pdf-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 250;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .pdf-loader-inner {
+      background: var(--elevated);
+      border: 1px solid var(--border-mid);
+      border-radius: 16px;
+      padding: 32px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      max-width: 320px;
+    }
+
+    .pdf-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(196, 163, 90, 0.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: pdfSpin 0.8s linear infinite;
+    }
+
+    @keyframes pdfSpin { to { transform: rotate(360deg); } }
+
+    .pdf-loader-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--cream-dim);
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    /* ── Bottom-sheet drawer (PDF actions) ───────────────────────── */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      transition: background 0.28s ease;
+    }
+
+    .drawer-overlay.open { background: rgba(0, 0, 0, 0.55); }
+
+    .drawer {
+      width: 100%;
+      max-width: 480px;
+      background: var(--elevated);
+      border: 1px solid var(--border-mid);
+      border-bottom: none;
+      border-radius: 20px 20px 0 0;
+      padding: 10px 20px calc(28px + env(safe-area-inset-bottom));
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+      box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .drawer-overlay.open .drawer { transform: translateY(0); }
+
+    .drawer-grabber {
+      width: 38px;
+      height: 4px;
+      background: rgba(196, 163, 90, 0.25);
+      border-radius: 2px;
+      margin: 6px auto 18px;
+    }
+
+    .drawer-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--cream);
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .drawer-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .drawer-btn {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--cream);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 15px 18px;
+      border-radius: 12px;
+      text-align: left;
+      transition: transform 0.1s, border-color 0.15s, background 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .drawer-btn:active {
+      transform: scale(0.98);
+      border-color: var(--gold-dim);
+      background: var(--elevated);
+    }
+
+    .drawer-icon {
+      font-size: 20px;
+      width: 26px;
+      text-align: center;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .drawer-btn--messenger {
+      background: rgba(0, 132, 255, 0.08);
+      border-color: rgba(0, 132, 255, 0.3);
+      color: #4ea3ff;
+    }
+
+    .drawer-btn--messenger:active {
+      background: rgba(0, 132, 255, 0.16);
+      border-color: rgba(0, 132, 255, 0.5);
+    }
   </style>
 </head>
 <body>
@@ -525,6 +688,13 @@
       <p class="progress-label f-mono" id="progressLabel">0 pâtisserie visitée</p>
     </section>
 
+    <section class="report-cta" aria-label="Générer un rapport PDF">
+      <button id="genReportBtn" class="report-btn" type="button">
+        <span class="report-emoji" aria-hidden="true">📄</span>
+        <span>Générer le rapport PDF</span>
+      </button>
+    </section>
+
     <hr class="section-rule" />
 
     <!-- Ordered list with links -->
@@ -555,7 +725,31 @@
 
   </main>
 
-  <script src="assets/app.js?v=6"></script>
-  <script src="assets/classement.js?v=2"></script>
+  <div class="pdf-loader" id="pdfLoader" hidden role="status" aria-live="polite">
+    <div class="pdf-loader-inner">
+      <div class="pdf-spinner" aria-hidden="true"></div>
+      <div class="pdf-loader-text">Génération du PDF…</div>
+    </div>
+  </div>
+
+  <div class="drawer-overlay" id="pdfActionsOverlay" role="dialog" aria-modal="true" aria-labelledby="pdfActionsTitle" hidden>
+    <div class="drawer" role="document">
+      <div class="drawer-grabber" aria-hidden="true"></div>
+      <h3 class="drawer-title" id="pdfActionsTitle">Rapport prêt</h3>
+      <div class="drawer-actions">
+        <button class="drawer-btn" type="button" data-pdf-action="download">
+          <span class="drawer-icon" aria-hidden="true">⬇️</span>
+          <span>Télécharger le PDF</span>
+        </button>
+        <button class="drawer-btn drawer-btn--messenger" type="button" data-pdf-action="share">
+          <span class="drawer-icon" aria-hidden="true">💬</span>
+          <span>Partager sur Messenger</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/app.js?v=7"></script>
+  <script src="assets/classement.js?v=3"></script>
 </body>
 </html>
