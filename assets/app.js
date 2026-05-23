@@ -277,6 +277,17 @@ const BACKUPS = {
 const EVENT_DATE = new Date("2026-05-23T11:15:00-04:00");
 const KEY_CHECKINS = "eclairs_mtl_checkins";
 const KEY_PHOTOS   = "eclairs_mtl_photos";
+const KEY_RATINGS  = "eclairs_mtl_ratings";
+
+const RATING_CRITERIA = [
+  { id: "pate",         label: "Pâte" },
+  { id: "ganache",      label: "Ganache" },
+  { id: "qualite_prix", label: "Qualité/prix" },
+  { id: "visuel",       label: "Visuel" },
+  { id: "fraicheur",    label: "Fraîcheur" },
+  { id: "glacage",      label: "Glaçage" },
+  { id: "globale",      label: "Note globale" },
+];
 
 // =============================================================================
 // STORAGE
@@ -293,6 +304,13 @@ function getPhotos() {
 }
 function savePhotos(data) {
   localStorage.setItem(KEY_PHOTOS, JSON.stringify(data));
+}
+
+function getRatings() {
+  try { return JSON.parse(localStorage.getItem(KEY_RATINGS) || "{}"); } catch { return {}; }
+}
+function saveRatings(data) {
+  localStorage.setItem(KEY_RATINGS, JSON.stringify(data));
 }
 
 // =============================================================================
@@ -358,6 +376,36 @@ const ICON_NAV = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" st
 const ICON_CHECK = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 const ICON_PIN = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
 const ICON_CAMERA = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+const ICON_STAR = `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+
+// =============================================================================
+// RATING FORM
+// =============================================================================
+function renderStars(stopId, critId, currentValue) {
+  return [1, 2, 3, 4, 5].map(v => `
+    <button type="button"
+            class="star-btn${v <= currentValue ? " filled" : ""}"
+            data-stop-id="${stopId}"
+            data-crit="${critId}"
+            data-val="${v}"
+            aria-label="${v}/5">
+      ${ICON_STAR}
+    </button>`).join("");
+}
+
+function renderRatingForm(stopId, ratings) {
+  const stopRatings = ratings[stopId] || {};
+  const rowsHtml = RATING_CRITERIA.map(c => `
+    <div class="rating-row${c.id === "globale" ? " rating-row--overall" : ""}">
+      <div class="rating-label">${c.label}</div>
+      <div class="stars">${renderStars(stopId, c.id, stopRatings[c.id] || 0)}</div>
+    </div>`).join("");
+  return `
+    <div class="rating-section">
+      <div class="rating-title f-mono">Notation éclair</div>
+      ${rowsHtml}
+    </div>`;
+}
 
 // =============================================================================
 // COUNTDOWN
@@ -403,6 +451,7 @@ function renderStops() {
 
   const checkins = getCheckins();
   const photos   = getPhotos();
+  const ratings  = getRatings();
   const nextIdx  = getNextIdx();
 
   container.innerHTML = PATISSERIES.map((stop, idx) => {
@@ -511,6 +560,7 @@ function renderStops() {
       ${websiteHtml}
     </div>
     ${checkinHtml}
+    ${renderRatingForm(stop.id, ratings)}
     <div class="photos-section">
       <div class="photos-label f-mono">Photos souvenir</div>
       <div class="photos-strip" id="photos-${stop.id}">
@@ -608,6 +658,13 @@ function initEventDelegation() {
       return;
     }
 
+    // Star rating
+    const starBtn = e.target.closest(".star-btn");
+    if (starBtn) {
+      handleStarClick(starBtn);
+      return;
+    }
+
     // Add photo
     const addPhotoBtn = e.target.closest(".add-photo-btn");
     if (addPhotoBtn) {
@@ -691,6 +748,32 @@ function handleCheckin(stopId) {
 }
 
 // =============================================================================
+// STAR RATING
+// =============================================================================
+function handleStarClick(btn) {
+  const stopId = btn.dataset.stopId;
+  const crit   = btn.dataset.crit;
+  const val    = parseInt(btn.dataset.val, 10);
+  if (!stopId || !crit || isNaN(val)) return;
+
+  const ratings = getRatings();
+  if (!ratings[stopId]) ratings[stopId] = {};
+
+  const newVal = ratings[stopId][crit] === val ? 0 : val;
+  if (newVal === 0) {
+    delete ratings[stopId][crit];
+  } else {
+    ratings[stopId][crit] = newVal;
+  }
+  saveRatings(ratings);
+
+  btn.parentElement.querySelectorAll(".star-btn").forEach(b => {
+    const v = parseInt(b.dataset.val, 10);
+    b.classList.toggle("filled", v <= newVal);
+  });
+}
+
+// =============================================================================
 // LIGHTBOX
 // =============================================================================
 function openLightbox(src) {
@@ -739,8 +822,11 @@ document.addEventListener("DOMContentLoaded", () => {
 // =============================================================================
 window.ECLAIRS_APP = {
   PATISSERIES,
+  RATING_CRITERIA,
   getCheckins,
   getPhotos,
   savePhotos,
+  getRatings,
+  saveRatings,
   buildPlaceUrl,
 };
