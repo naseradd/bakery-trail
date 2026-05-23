@@ -706,9 +706,10 @@
       align-items: flex-end;
       justify-content: center;
       transition: background 0.28s ease;
+      pointer-events: none;
     }
 
-    .drawer-overlay.open { background: rgba(0, 0, 0, 0.55); }
+    .drawer-overlay.open { background: rgba(0, 0, 0, 0.55); pointer-events: auto; }
 
     .drawer {
       width: 100%;
@@ -1037,6 +1038,6 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-  <script src="assets/app.js?v=11"></script>
+  <script src="assets/app.js?v=12"></script>
 </body>
 </html>
