@@ -281,7 +281,6 @@ const KEY_RATINGS  = "eclairs_mtl_ratings";
 
 const SITE_URL  = "https://naseradd.github.io/bakery-trail/";
 const FB_APP_ID = "966242223397117";
-const JSZIP_CDN = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
 
 const RATING_CRITERIA = [
   { id: "pate",         label: "Pâte" },
@@ -388,13 +387,43 @@ const ICON_MESSENGER = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M1
 // =============================================================================
 // SHARE / EXPORT HELPERS
 // =============================================================================
-function buildMessengerShareUrl(link) {
+function buildMessengerWebFallback(link) {
   const p = new URLSearchParams({
     link,
     redirect_uri: link,
     app_id: FB_APP_ID,
   });
   return `https://www.facebook.com/dialog/send?${p.toString()}`;
+}
+
+function isMobileDevice() {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
+// Open Messenger share. On mobile try the native app deep link first,
+// fall back to the web dialog if nothing handles the URL within 1.5s.
+function openMessengerShare(link) {
+  const fallback = buildMessengerWebFallback(link);
+
+  if (!isMobileDevice()) {
+    window.open(fallback, "_blank", "noopener");
+    return;
+  }
+
+  const deepLink = `fb-messenger://share/?link=${encodeURIComponent(link)}`;
+  let cancelled = false;
+
+  const onVisibility = () => {
+    if (document.hidden) cancelled = true;
+  };
+  document.addEventListener("visibilitychange", onVisibility, { once: true });
+
+  window.location.href = deepLink;
+
+  setTimeout(() => {
+    document.removeEventListener("visibilitychange", onVisibility);
+    if (!cancelled) window.location.href = fallback;
+  }, 1500);
 }
 
 async function copyToClipboard(text) {
@@ -426,56 +455,43 @@ function buildNotesShareText(stop, ratings) {
   return lines.join("\n");
 }
 
-let _jszipPromise = null;
-function loadJSZip() {
-  if (window.JSZip) return Promise.resolve(window.JSZip);
-  if (_jszipPromise) return _jszipPromise;
-  _jszipPromise = new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = JSZIP_CDN;
-    s.async = true;
-    s.onload  = () => resolve(window.JSZip);
-    s.onerror = () => { _jszipPromise = null; reject(new Error("JSZip load failed")); };
-    document.head.appendChild(s);
-  });
-  return _jszipPromise;
+function extFromDataUrl(dataUrl) {
+  const m = /^data:(image\/[a-zA-Z+]+);base64,/.exec(dataUrl);
+  if (!m) return "jpg";
+  if (m[1].includes("png"))  return "png";
+  if (m[1].includes("webp")) return "webp";
+  return "jpg";
 }
 
-async function downloadAllPhotosZip() {
+async function downloadAllPhotos() {
   const photos = getPhotos();
   const total  = Object.values(photos).reduce((acc, arr) => acc + (arr ? arr.length : 0), 0);
   if (total === 0) {
     alert("Aucune photo à télécharger pour l'instant.");
     return;
   }
+  if (total > 5 && !confirm(`Télécharger ${total} photos individuellement ? Ton navigateur va peut-être demander d'autoriser plusieurs téléchargements.`)) {
+    return;
+  }
 
-  let JSZip;
-  try { JSZip = await loadJSZip(); }
-  catch { alert("Impossible de charger JSZip (réseau ?). Réessaie plus tard."); return; }
-
-  const zip = new JSZip();
   for (const stop of PATISSERIES) {
     const arr = photos[stop.id];
     if (!arr || arr.length === 0) continue;
-    const folderName = `${String(stop.order).padStart(2, "0")}-${stop.id}`;
-    const folder = zip.folder(folderName);
-    arr.forEach((dataUrl, i) => {
-      const m = /^data:(image\/[a-zA-Z+]+);base64,(.+)$/.exec(dataUrl);
-      if (!m) return;
-      const ext = m[1].includes("png") ? "png" : m[1].includes("webp") ? "webp" : "jpg";
-      folder.file(`${String(i + 1).padStart(2, "0")}.${ext}`, m[2], { base64: true });
-    });
+    for (let i = 0; i < arr.length; i++) {
+      const dataUrl = arr[i];
+      const ext = extFromDataUrl(dataUrl);
+      const name = `eclair-${String(stop.order).padStart(2, "0")}-${stop.id}-${String(i + 1).padStart(2, "0")}.${ext}`;
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // Stagger to give the browser room — many browsers throttle rapid
+      // synchronous downloads triggered from a single user gesture.
+      await new Promise(r => setTimeout(r, 250));
+    }
   }
-
-  const blob = await zip.generateAsync({ type: "blob" });
-  const url  = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "marathon-eclair-mtl-photos.zip";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
 function sharePhotosOnMessenger() {
@@ -486,7 +502,7 @@ function sharePhotosOnMessenger() {
     : `Marathon Éclair MTL — 6 pâtisseries, 1 journée :\n${SITE_URL}`;
   copyToClipboard(msg).then(() => {
     alert("Message copié dans le presse-papier. Colle-le dans Messenger après l'envoi du lien.");
-    window.open(buildMessengerShareUrl(SITE_URL), "_blank", "noopener");
+    openMessengerShare(SITE_URL);
   });
 }
 
@@ -496,7 +512,7 @@ async function shareNotesOnMessenger(stopId) {
   const text = buildNotesShareText(stop, getRatings());
   await copyToClipboard(text);
   alert("Notes copiées dans le presse-papier. Colle-les dans Messenger après l'envoi du lien.");
-  window.open(buildMessengerShareUrl(SITE_URL), "_blank", "noopener");
+  openMessengerShare(SITE_URL);
 }
 
 // =============================================================================
@@ -799,7 +815,7 @@ function initEventDelegation() {
 
     // Global "download all photos"
     if (e.target.closest("#downloadPhotosBtn")) {
-      downloadAllPhotosZip();
+      downloadAllPhotos();
       return;
     }
 
@@ -973,8 +989,8 @@ window.ECLAIRS_APP = {
   getRatings,
   saveRatings,
   buildPlaceUrl,
-  downloadAllPhotosZip,
+  downloadAllPhotos,
   sharePhotosOnMessenger,
   shareNotesOnMessenger,
-  buildMessengerShareUrl,
+  openMessengerShare,
 };
