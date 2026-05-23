@@ -562,12 +562,25 @@ async function shareNotesOnMessenger(stopId) {
 // SHARE DRAWER (per-stop bottom sheet)
 // =============================================================================
 let _drawerStopId = null;
+let _pdfBlob = null;
 
 function openShareDrawer(stopId) {
   const stop = PATISSERIES.find(p => p.id === stopId);
   if (!stop) return;
   _drawerStopId = stopId;
 
+
+  // Restore stop-specific drawer actions
+  const actionsEl = document.querySelector(".drawer-actions");
+  if (actionsEl) {
+    actionsEl.innerHTML =
+      '<button class="drawer-btn" type="button" data-drawer-action="copy">' +
+      '<span class="drawer-icon">\u{1F4CB}</span><span>Copier mes notes</span></button>' +
+      '<button class="drawer-btn" type="button" data-drawer-action="photos">' +
+      '<span class="drawer-icon">\u{1F4F8}</span><span>Mes photos</span></button>' +
+      '<button class="drawer-btn drawer-btn--messenger" type="button" data-drawer-action="messenger">' +
+      '<span class="drawer-icon">\u{1F4AC}</span><span>Envoyer sur Messenger</span></button>';
+  }
   const overlay = document.getElementById("drawerOverlay");
   const title   = document.getElementById("drawerTitle");
   if (!overlay || !title) return;
@@ -589,7 +602,33 @@ function closeShareDrawer() {
     overlay.hidden = true;
     document.body.style.overflow = "";
     _drawerStopId = null;
-  }, 280);
+  }
+
+function openPdfDrawer() {
+  const overlay = document.getElementById("drawerOverlay");
+  const title = document.getElementById("drawerTitle");
+  const actions = document.querySelector(".drawer-actions");
+  if (!overlay || !title || !actions) return;
+
+  _drawerStopId = null;
+  title.textContent = "Rapport PDF";
+
+  const canShareFiles = !!(navigator.canShare && navigator.canShare({
+    files: [new File([""], "test.pdf", { type: "application/pdf" })]
+  }));
+
+  actions.innerHTML =
+    '<button class="drawer-btn" type="button" data-drawer-action="pdf-download">' +
+    '<span class="drawer-icon">\u{1F4E5}</span><span>T\u00e9l\u00e9charger le PDF</span></button>' +
+    (canShareFiles
+      ? '<button class="drawer-btn" type="button" data-drawer-action="pdf-share">' +
+        '<span class="drawer-icon">\u{1F4E4}</span><span>Partager le PDF</span></button>'
+      : '');
+
+  overlay.hidden = false;
+  document.body.style.overflow = "hidden";
+  requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.add("open")));
+}, 280);
 }
 
 async function handleDrawerAction(action) {
@@ -597,6 +636,42 @@ async function handleDrawerAction(action) {
   const stopId = _drawerStopId;
   const stop = PATISSERIES.find(p => p.id === stopId);
   if (!stop) return;
+
+
+  if (action === "pdf-download") {
+    closeShareDrawer();
+    if (!_pdfBlob) return;
+    const url = URL.createObjectURL(_pdfBlob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bakerytrail-top-eclairs.pdf";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    _pdfBlob = null;
+    return;
+  }
+
+  if (action === "pdf-share") {
+    if (!_pdfBlob) { closeShareDrawer(); return; }
+    const file = new File([_pdfBlob], "bakerytrail-top-eclairs.pdf", { type: "application/pdf" });
+    closeShareDrawer();
+    try {
+      await navigator.share({ title: "BakeryTrail · Top \u00c9clairs", files: [file] });
+    } catch (e) {
+      if (e.name !== "AbortError") {
+        const url = URL.createObjectURL(_pdfBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "bakerytrail-top-eclairs.pdf";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+    }
+    _pdfBlob = null;
+    return;
+  }
 
   if (action === "copy") {
     const text = buildNotesShareText(stop, getRatings());
