@@ -100,6 +100,27 @@
       padding: 5px 11px;
       border-radius: 6px;
       white-space: nowrap;
+      max-width: 60vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .countdown--live {
+      color: var(--gold-bright);
+      border-color: var(--gold);
+      background: rgba(196, 163, 90, 0.16);
+      animation: pulseGold 2.4s ease-in-out infinite;
+    }
+
+    .countdown--done {
+      color: var(--green-bright);
+      background: rgba(74, 146, 99, 0.14);
+      border-color: var(--green-dim);
+    }
+
+    @keyframes pulseGold {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(196, 163, 90, 0); }
+      50%      { box-shadow: 0 0 0 4px rgba(196, 163, 90, 0.10); }
     }
 
     .nav-tabs {
@@ -358,6 +379,65 @@
     .transit-mode {
       font-weight: 500;
       color: var(--cream);
+    }
+
+    /* ── BIXI station buttons ───────────────────────────────────── */
+    .bixi-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .btn-bixi {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(196, 163, 90, 0.06);
+      border: 1px solid var(--gold-dim);
+      color: var(--cream);
+      padding: 9px 10px;
+      border-radius: var(--r-sm);
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+      min-width: 0;
+    }
+
+    .btn-bixi:active {
+      transform: scale(0.97);
+      border-color: var(--gold);
+      background: rgba(196, 163, 90, 0.12);
+    }
+
+    .bixi-icon {
+      font-size: 16px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .bixi-label {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .bixi-action {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold-bright);
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .bixi-station {
+      font-size: 11px;
+      color: var(--cream-dim);
+      font-family: 'JetBrains Mono', monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     /* ── Flavors ─────────────────────────────────────────────────── */

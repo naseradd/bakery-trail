@@ -46,7 +46,13 @@ const PATISSERIES = [
     eclairFlavors: ["chocolat", "vanille", "café"],
     openSat: "08:00–18:00",
     arrivalTime: "12:45",
-    transitFromPrev: { mode: "bicycling", duration: 8, detail: "BIXI · 1.5 km axe Masson" },
+    transitFromPrev: {
+      mode: "bicycling",
+      duration: 8,
+      detail: "BIXI · 1.5 km axe Masson",
+      bixiPickup: { name: "8e av / Rosemont (Bibliothèque)", lat: 45.55157, lng: -73.58225, walkMin: 2 },
+      bixiDrop:   { name: "10e av / Masson",                  lat: 45.55039, lng: -73.57376, walkMin: 1 },
+    },
     websiteUrl: "https://patisseriealexplatel.ca",
     notes: "4.8/5 · chef réputé, pâtisseries raffinées.",
   },
@@ -59,9 +65,15 @@ const PATISSERIES = [
     rating: 4.6,
     reviewCount: 338,
     eclairFlavors: ["chocolat", "vanille", "café", "saisonnier"],
-    openSat: "07:30–20:00",
+    openSat: "07:00–19:00",
     arrivalTime: "13:20",
-    transitFromPrev: { mode: "bicycling", duration: 15, detail: "BIXI · 3 km St-Joseph → St-Denis" },
+    transitFromPrev: {
+      mode: "bicycling",
+      duration: 15,
+      detail: "BIXI · 3 km St-Joseph → St-Denis",
+      bixiPickup: { name: "10e av / Masson",  lat: 45.55039, lng: -73.57376, walkMin: 1 },
+      bixiDrop:   { name: "Berri / Rachel",   lat: 45.52275, lng: -73.57725, walkMin: 1 },
+    },
     websiteUrl: "https://www.mamieclafoutis.com",
     notes: "Artisan depuis 2008, zéro ingrédients synthétiques.",
   },
@@ -166,6 +178,10 @@ function buildPlaceUrl(stop) {
   return `https://www.google.com/maps/search/?api=1&query=${q}`;
 }
 
+function buildBixiUrl(station) {
+  return `https://secure.bixi.com/map/?lat=${station.lat}&lng=${station.lng}&zoom=17`;
+}
+
 // =============================================================================
 // TRANSIT HELPERS
 // =============================================================================
@@ -188,10 +204,24 @@ function updateCountdown() {
   const el = document.getElementById("countdown");
   if (!el) return;
   const diff = EVENT_DATE - new Date();
-  if (diff <= 0) { el.textContent = "C'EST PARTI"; return; }
-  const days  = Math.floor(diff / 86400000);
-  const hours = Math.floor((diff % 86400000) / 3600000);
-  el.textContent = days >= 1 ? `J-${days}` : `H-${hours}`;
+  if (diff > 0) {
+    const days  = Math.floor(diff / 86400000);
+    const hours = Math.floor((diff % 86400000) / 3600000);
+    el.textContent = days >= 1 ? `J-${days}` : `H-${hours}`;
+    el.classList.remove("countdown--live", "countdown--done");
+    return;
+  }
+  const nextIdx = getNextIdx();
+  if (nextIdx < 0) {
+    el.textContent = "TOURNÉE COMPLÈTE 🎉";
+    el.classList.add("countdown--done");
+    el.classList.remove("countdown--live");
+    return;
+  }
+  const next = PATISSERIES[nextIdx];
+  el.textContent = `EN ROUTE → ${String(next.order).padStart(2, "0")} · ${next.arrivalTime}`;
+  el.classList.add("countdown--live");
+  el.classList.remove("countdown--done");
 }
 
 // =============================================================================
@@ -250,6 +280,26 @@ function renderStops() {
          </div>`
       : "";
 
+    const t = stop.transitFromPrev;
+    const bixiHtml = (t && t.mode === "bicycling" && t.bixiPickup && t.bixiDrop)
+      ? `<div class="bixi-row">
+           <a href="${buildBixiUrl(t.bixiPickup)}" target="_blank" rel="noopener" class="btn-bixi">
+             <span class="bixi-icon">🚲</span>
+             <span class="bixi-label">
+               <span class="bixi-action">Prendre BIXI</span>
+               <span class="bixi-station">${t.bixiPickup.name} · ${t.bixiPickup.walkMin} min</span>
+             </span>
+           </a>
+           <a href="${buildBixiUrl(t.bixiDrop)}" target="_blank" rel="noopener" class="btn-bixi">
+             <span class="bixi-icon">🅿️</span>
+             <span class="bixi-label">
+               <span class="bixi-action">Déposer BIXI</span>
+               <span class="bixi-station">${t.bixiDrop.name} · ${t.bixiDrop.walkMin} min</span>
+             </span>
+           </a>
+         </div>`
+      : "";
+
     const checkinHtml = isVisited
       ? `<button class="checkin-btn done" data-stop-id="${stop.id}" disabled>
            ${ICON_CHECK} Visité · ${checkinTime}
@@ -285,6 +335,7 @@ function renderStops() {
   </div>
   <div class="card-body">
     ${transitHtml}
+    ${bixiHtml}
     <div class="flavors">${flavorsHtml}</div>
     <div class="action-row">
       <a href="${trajetUrl}" target="_blank" rel="noopener" class="btn-maps">
@@ -400,6 +451,7 @@ function handleCheckin(stopId) {
   checkins[stopId] = new Date().toISOString();
   saveCheckins(checkins);
   renderStops();
+  updateCountdown();
 
   // Scroll to next unvisited stop
   const nextIdx = getNextIdx();
