@@ -613,7 +613,7 @@ function openPdfDrawer() {
   }));
   actions.innerHTML =
     "<button class=\"drawer-btn\" type=\"button\" data-drawer-action=\"pdf-download\">" +
-    "<span class=\"drawer-icon\">📥</span><span>Télécharger le PDF</span></button>" +
+    "<span class=\"drawer-icon\">📥</span><span>" + (canShare ? "Enregistrer le PDF" : "Télécharger le PDF") + "</span></button>" +
     (canShare
       ? "<button class=\"drawer-btn\" type=\"button\" data-drawer-action=\"pdf-share\">" +
         "<span class=\"drawer-icon\">📤</span><span>Partager le PDF</span></button>"
@@ -624,37 +624,60 @@ function openPdfDrawer() {
 }
 
 async function handleDrawerAction(action) {
+// PDF actions don't need a stop ID — handle before the _drawerStopId guard
+if (action === "pdf-download") {
+closeShareDrawer();
+if (!_pdfBlob) return;
+// iOS Safari: <a download> on blob URLs silently fails — use Web Share API with file instead
+if (navigator.canShare && navigator.canShare({ files: [new File([""], "t.pdf", {type: "application/pdf"})] })) {
+const pf = new File([_pdfBlob], "bakerytrail-top-eclairs.pdf", {type: "application/pdf"});
+try {
+await navigator.share({ title: "BakeryTrail Top Éclairs", files: [pf] });
+} catch(e) {
+if (e.name !== "AbortError") {
+const purl = URL.createObjectURL(_pdfBlob);
+window.open(purl, "_blank");
+setTimeout(() => URL.revokeObjectURL(purl), 10000);
+}
+}
+} else {
+// Desktop: classic <a download>
+const purl = URL.createObjectURL(_pdfBlob);
+const pa = document.createElement("a");
+pa.href = purl;
+pa.download = "bakerytrail-top-eclairs.pdf";
+document.body.appendChild(pa);
+pa.click();
+document.body.removeChild(pa);
+setTimeout(() => URL.revokeObjectURL(purl), 5000);
+}
+_pdfBlob = null;
+return;
+}
+
+if (action === "pdf-share") {
+if (!_pdfBlob) { closeShareDrawer(); return; }
+const pf = new File([_pdfBlob], "bakerytrail-top-eclairs.pdf", {type: "application/pdf"});
+closeShareDrawer();
+try {
+await navigator.share({ title: "BakeryTrail Top Éclairs", files: [pf] });
+} catch(e) {
+if (e.name !== "AbortError") {
+const purl = URL.createObjectURL(_pdfBlob);
+window.open(purl, "_blank");
+setTimeout(() => URL.revokeObjectURL(purl), 10000);
+}
+}
+_pdfBlob = null;
+return;
+}
+
+// Non-PDF actions require a stop to be set
 if (!_drawerStopId) return;
 const stopId = _drawerStopId;
 const stop = PATISSERIES.find(p => p.id === stopId);
 if (!stop) return;
 
-  if (action === "pdf-download") {
-    closeShareDrawer();
-    if (!_pdfBlob) return;
-    const purl = URL.createObjectURL(_pdfBlob);
-    const pa = document.createElement("a");
-    pa.href = purl; pa.download = "bakerytrail-top-eclairs.pdf";
-    document.body.appendChild(pa); pa.click(); document.body.removeChild(pa);
-    setTimeout(() => URL.revokeObjectURL(purl), 5000);
-    _pdfBlob = null; return;
-  }
-  if (action === "pdf-share") {
-    if (!_pdfBlob) { closeShareDrawer(); return; }
-    const pf = new File([_pdfBlob], "bakerytrail-top-eclairs.pdf", {type: "application/pdf"});
-    closeShareDrawer();
-    try { await navigator.share({title: "BakeryTrail Top Eclairs", files: [pf]}); }
-    catch(e) {
-      if (e.name !== "AbortError") {
-        const purl = URL.createObjectURL(_pdfBlob);
-        const pa = document.createElement("a");
-        pa.href = purl; pa.download = "bakerytrail-top-eclairs.pdf";
-        document.body.appendChild(pa); pa.click(); document.body.removeChild(pa);
-        setTimeout(() => URL.revokeObjectURL(purl), 5000);
-      }
-    }
-    _pdfBlob = null; return;
-  }
 if (action === "copy") {
 const text = buildNotesShareText(stop, getRatings());
 closeShareDrawer();
